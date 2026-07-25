@@ -10,16 +10,22 @@ import { MagicCircle } from './Effects/MagicCircle';
 import { IronManUI } from './Effects/IronManUI';
 import { FingerTrails } from './Effects/FingerTrails';
 import { AirDraw } from './Effects/AirDraw';
+import { ARDrawMode } from './Effects/ARDrawMode';
+import { ElementalEnergy } from './Effects/ElementalEnergy';
+import { ARObjectsMode } from './Effects/ARObjectsMode';
+import { ARImageOverlayMode } from './Effects/ARImageOverlayMode';
+import { ErrorBoundary } from './ErrorBoundary';
 
 interface Props {
   landmarks: HandLandmarks[];
 }
 
 export const ARCanvas: React.FC<Props> = ({ landmarks }) => {
-  const { activeEffect, settings } = useStore();
+  const { activeEffect, settings, appMode } = useStore();
 
   return (
     <Canvas
+      shadows
       orthographic
       camera={{ position: [0, 0, 5], zoom: 100 }}
       style={{
@@ -35,14 +41,51 @@ export const ARCanvas: React.FC<Props> = ({ landmarks }) => {
     >
       <ambientLight intensity={1} />
       
-      {activeEffect === 'neon' && <NeonSkeleton landmarks={landmarks} />}
-      {activeEffect === 'hologram' && <CyberHologram landmarks={landmarks} />}
-      {activeEffect === 'shield' && <EnergyShield landmarks={landmarks} />}
-      {activeEffect === 'magic' && <MagicCircle landmarks={landmarks} />}
-      {activeEffect === 'ironman' && <IronManUI landmarks={landmarks} />}
-      {activeEffect === 'airdraw' && <AirDraw landmarks={landmarks} />}
-      
-      <FingerTrails landmarks={landmarks} />
+      {appMode === 'airWriter' && (
+        <>
+          {activeEffect === 'neon' && <NeonSkeleton landmarks={landmarks} />}
+          {activeEffect === 'hologram' && <CyberHologram landmarks={landmarks} />}
+          {activeEffect === 'shield' && <EnergyShield landmarks={landmarks} />}
+          {activeEffect === 'magic' && <MagicCircle landmarks={landmarks} />}
+          {activeEffect === 'ironman' && <IronManUI landmarks={landmarks} />}
+          {activeEffect === 'airdraw' && (
+            <ErrorBoundary fallbackMessage="Feature unavailable">
+              <AirDraw landmarks={landmarks} />
+            </ErrorBoundary>
+          )}
+          <FingerTrails landmarks={landmarks} />
+        </>
+      )}
+
+      {appMode === 'arDrawing' && (
+        <ErrorBoundary fallbackMessage="AR Drawing unavailable">
+          <ARDrawMode landmarks={landmarks} />
+        </ErrorBoundary>
+      )}
+
+      {appMode === 'neonSkeleton' && (
+        <ErrorBoundary fallbackMessage="Neon Skeleton unavailable">
+          <NeonSkeleton landmarks={landmarks} />
+        </ErrorBoundary>
+      )}
+
+      {appMode === 'elemental' && (
+        <ErrorBoundary fallbackMessage="Elemental Energy unavailable">
+          <ElementalEnergy landmarks={landmarks} />
+        </ErrorBoundary>
+      )}
+
+      {appMode === 'arObjects' && (
+        <ErrorBoundary fallbackMessage="3D AR Objects unavailable">
+          <ARObjectsMode landmarks={landmarks} />
+        </ErrorBoundary>
+      )}
+
+      {appMode === 'arImageOverlay' && (
+        <ErrorBoundary fallbackMessage="Image Overlay unavailable">
+          <ARImageOverlayMode landmarks={landmarks} />
+        </ErrorBoundary>
+      )}
 
       <EffectComposer enableNormalPass={false}>
         <Bloom 

@@ -10,9 +10,11 @@ function App() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const requestRef = useRef<number>(0);
   const [landmarks, setLandmarks] = useState<HandLandmarks[]>([]);
-  const { setStats, settings } = useStore();
+  const { setStats, settings, setEnvironmentBrightness } = useStore();
   
   const lastTimeRef = useRef(performance.now());
+  const brightnessCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const brightnessLastTimeRef = useRef(performance.now());
   const frameCountRef = useRef(0);
   const streamRef = useRef<MediaStream | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
@@ -125,6 +127,30 @@ function App() {
           lastTimeRef.current = now;
         } else {
           setStats({ handsDetected: results.length });
+        }
+
+        // Lighting Estimation (every 1 second)
+        if (now - brightnessLastTimeRef.current >= 1000) {
+          if (!brightnessCanvasRef.current) {
+            brightnessCanvasRef.current = document.createElement('canvas');
+            brightnessCanvasRef.current.width = 16;
+            brightnessCanvasRef.current.height = 16;
+          }
+          const ctx = brightnessCanvasRef.current.getContext('2d', { willReadFrequently: true });
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, 16, 16);
+            const data = ctx.getImageData(0, 0, 16, 16).data;
+            let sum = 0;
+            for (let i = 0; i < data.length; i += 4) {
+              // Luminance formula
+              sum += (0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2]);
+            }
+            const avgBrightness = (sum / (16 * 16)) / 255;
+            // Normalize to a reasonable range for Three.js lights (0.3 to 1.5)
+            const lightIntensity = Math.max(0.3, Math.min(1.5, avgBrightness * 2.0));
+            setEnvironmentBrightness(lightIntensity);
+          }
+          brightnessLastTimeRef.current = now;
         }
 
         requestRef.current = requestAnimationFrame(detect);

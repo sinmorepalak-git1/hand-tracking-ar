@@ -1,6 +1,6 @@
 import { HandLandmarks } from './handTracker';
 
-export type Gesture = 'Open_Palm' | 'Closed_Fist' | 'Pointing' | 'Peace_Sign' | 'Thumbs_Up' | 'Unknown';
+export type Gesture = 'Open_Palm' | 'Closed_Fist' | 'Pointing' | 'Peace_Sign' | 'Thumbs_Up' | 'Pinch' | 'Five_Fingers_Spread' | 'Swipe_Left' | 'Swipe_Right' | 'Unknown';
 
 export const detectGesture = (landmarks: HandLandmarks): Gesture => {
   if (!landmarks || landmarks.length === 0) return 'Unknown';
@@ -16,7 +16,25 @@ export const detectGesture = (landmarks: HandLandmarks): Gesture => {
   const ringExtended = isFingerExtended(16, 15, 14, 13);
   const pinkyExtended = isFingerExtended(20, 19, 18, 17);
 
+  // Pinch detection: Thumb tip and Index tip are very close to each other
+  const dx = landmarks[4].x - landmarks[8].x;
+  const dy = landmarks[4].y - landmarks[8].y;
+  const dz = (landmarks[4].z || 0) - (landmarks[8].z || 0);
+  const pinchDistance = Math.sqrt(dx*dx + dy*dy + dz*dz);
+  const isPinching = pinchDistance < 0.05;
+
+  if (isPinching && !middleExtended && !ringExtended && !pinkyExtended) {
+    return 'Pinch';
+  }
+
+  // Five Fingers Spread: all extended, plus distance between thumb and pinky is large
   if (thumbExtended && indexExtended && middleExtended && ringExtended && pinkyExtended) {
+    const spreadDx = landmarks[4].x - landmarks[20].x;
+    const spreadDy = landmarks[4].y - landmarks[20].y;
+    const spreadDistance = Math.sqrt(spreadDx*spreadDx + spreadDy*spreadDy);
+    if (spreadDistance > 0.3) {
+      return 'Five_Fingers_Spread';
+    }
     return 'Open_Palm';
   }
   
@@ -35,6 +53,9 @@ export const detectGesture = (landmarks: HandLandmarks): Gesture => {
   if (thumbExtended && !indexExtended && !middleExtended && !ringExtended && !pinkyExtended) {
     return 'Thumbs_Up';
   }
+
+  // Note: Swipe left/right requires temporal tracking (velocity), which will be handled in useGestureControls hook.
+  // detectGesture only handles static poses.
 
   return 'Unknown';
 };
