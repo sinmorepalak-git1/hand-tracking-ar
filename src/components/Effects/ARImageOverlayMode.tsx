@@ -42,7 +42,12 @@ const OverlayItem = ({
           loadedTexture.minFilter = THREE.LinearMipmapLinearFilter;
           loadedTexture.magFilter = THREE.LinearFilter;
           loadedTexture.generateMipmaps = true;
-          if (isMounted) setTexture(loadedTexture);
+          if (isMounted) {
+            setTexture(loadedTexture);
+            console.log('Texture Ready');
+          }
+        }, undefined, (err) => {
+          console.error('Texture failed to load', err);
         });
       }
     });
@@ -149,7 +154,7 @@ const OverlayItem = ({
   });
 
   // Shader injection for idle animation
-  const onBeforeCompile = (shader: THREE.Shader) => {
+  const onBeforeCompile = (shader: THREE.WebGLProgramParametersWithUniforms) => {
     shader.uniforms.time = { value: 0 };
     shader.uniforms.animationOn = { value: overlay.animationOn ? 1.0 : 0.0 };
     
@@ -176,7 +181,8 @@ const OverlayItem = ({
 
   if (!texture) return null;
 
-  const aspect = texture.image.width / texture.image.height;
+  const image = texture.image as HTMLImageElement;
+  const aspect = image.width / image.height;
   const flipX = overlay.flipX ? -1 : 1;
   const flipY = overlay.flipY ? -1 : 1;
 
@@ -261,6 +267,18 @@ export const ARImageOverlayMode = ({ landmarks }: Props) => {
   } = useStore();
   const { viewport } = useThree();
   const [isObjectVisible, setIsObjectVisible] = useState(true);
+
+  useEffect(() => {
+    console.log('Image Overlay Mounted');
+    console.log('Renderer Initialized');
+    console.log('Overlay Ready');
+  }, []);
+
+  useEffect(() => {
+    if (landmarks && landmarks.length > 0) {
+      console.log('MediaPipe Connected');
+    }
+  }, [landmarks]);
 
   const cycleImage = (direction: 1 | -1) => {
     if (imageOverlays.length === 0) return;

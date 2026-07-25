@@ -134,9 +134,6 @@ export const AirDraw = ({ landmarks }: Props) => {
             lineWidth={8}
             transparent
             opacity={0.9}
-            // Use: round line caps, round joins
-            linecap="round"
-            linejoin="round"
           />
         );
       })}

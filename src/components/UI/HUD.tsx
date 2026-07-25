@@ -168,7 +168,12 @@ export const HUD = () => {
             <Box size={16} /> 3D AR
           </button>
           <button 
-            onClick={() => setAppMode('arImageOverlay')}
+            onClick={() => {
+              console.log('Image Overlay Selected');
+              setAppMode('arImageOverlay');
+              setIsGalleryVisible(true);
+              console.log('Gallery Loaded');
+            }}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${appMode === 'arImageOverlay' ? 'bg-blue-500/30 text-blue-300' : 'text-gray-400 hover:text-white'}`}
           >
             <ImageIcon size={16} /> Image Overlay
@@ -230,7 +235,7 @@ export const HUD = () => {
                 
                 <div className="flex-1 overflow-y-auto flex flex-col gap-2 pr-1 custom-scrollbar">
                   {imageOverlays.length === 0 ? (
-                    <div className="text-xs text-gray-400 italic text-center mt-4">No images uploaded</div>
+                    <div className="text-xs text-gray-400 italic text-center mt-4">No images uploaded yet.</div>
                   ) : (
                     [...imageOverlays].sort((a, b) => b.zIndex - a.zIndex).map(img => (
                       <div 
